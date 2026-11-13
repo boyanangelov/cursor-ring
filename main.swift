@@ -38,6 +38,39 @@ let palette: [(String, NSColor)] = [
     ("Black", .black),
 ]
 
+// MARK: - Login item (LaunchAgent, same plist as install.sh)
+
+enum LoginItem {
+    static let label = "local.cursorring"
+    static var plistURL: URL {
+        FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/LaunchAgents/\(label).plist")
+    }
+
+    static var isEnabled: Bool { FileManager.default.fileExists(atPath: plistURL.path) }
+
+    /// Writes or removes the LaunchAgent. Takes effect at next login; we deliberately
+    /// don't bootstrap/bootout now, which would spawn a second copy or kill this one.
+    static func set(_ enabled: Bool) throws {
+        if !enabled {
+            try? FileManager.default.removeItem(at: plistURL)
+            return
+        }
+        guard let exe = Bundle.main.executablePath else { return }
+        let plist: [String: Any] = [
+            "Label": label,
+            "ProgramArguments": [exe],
+            "RunAtLoad": true,
+            "KeepAlive": ["SuccessfulExit": false],
+            "ProcessType": "Interactive",
+        ]
+        try FileManager.default.createDirectory(at: plistURL.deletingLastPathComponent(),
+                                                withIntermediateDirectories: true)
+        let data = try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0)
+        try data.write(to: plistURL, options: .atomic)
+    }
+}
+
 // MARK: - Ring window
 
 final class RingWindow: NSWindow {
@@ -152,6 +185,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(colorItem)
 
         menu.addItem(.separator())
+        let loginItem = NSMenuItem(title: "Start at Login", action: #selector(toggleLogin(_:)), keyEquivalent: "")
+        loginItem.target = self
+        loginItem.state = LoginItem.isEnabled ? .on : .off
+        menu.addItem(loginItem)
+
+        menu.addItem(.separator())
         let quit = NSMenuItem(title: "Quit Cursor Ring", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         menu.addItem(quit)
 
@@ -191,6 +230,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Settings.shared.visible.toggle()
         if Settings.shared.visible { window.orderFrontRegardless() } else { window.orderOut(nil) }
         updateToggleTitle()
+    }
+
+    @objc func toggleLogin(_ item: NSMenuItem) {
+        do {
+            try LoginItem.set(item.state != .on)
+        } catch {
+            NSAlert(error: error).runModal()
+        }
+        item.state = LoginItem.isEnabled ? .on : .off
     }
 
     @objc func radiusChanged(_ s: NSSlider) {
