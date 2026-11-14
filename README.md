@@ -29,7 +29,7 @@ xattr -dr com.apple.quarantine /Applications/CursorRing.app
 
 ## Requirements
 
-- macOS 11 (Big Sur) or later
+- An Apple Silicon Mac (M1 or later) running macOS 11 (Big Sur) or later
 - To build from source: the Xcode Command Line Tools (`xcode-select --install`)
 
 ## Build & run
