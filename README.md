@@ -2,7 +2,9 @@
 
 A tiny macOS menu-bar app that draws a circular band around the mouse cursor at an adjustable radius.
 
-![CursorRing around the mouse cursor](docs/screenshot.png)
+![Adjusting the ring from the menu bar](docs/menu-demo.gif)
+
+([MP4 version](docs/menu-demo.mp4))
 
 ## Why
 
@@ -39,11 +41,7 @@ xattr -dr com.apple.quarantine /Applications/CursorRing.app
 open CursorRing.app
 ```
 
-Use the menu-bar icon to adjust radius, thickness, opacity and color, or to hide the ring. Changes apply live:
-
-![Adjusting the ring from the menu bar](docs/menu-demo.gif)
-
-([MP4 version](docs/menu-demo.mp4))
+Use the menu-bar icon to adjust radius, thickness, opacity and color, or to hide the ring. Changes apply live.
 
 ## Start at login
 
