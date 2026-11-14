@@ -41,7 +41,7 @@ let palette: [(String, NSColor)] = [
 // MARK: - Login item (LaunchAgent, same plist as install.sh)
 
 enum LoginItem {
-    static let label = "local.cursorring"
+    static let label = "io.github.boyanangelov.cursorring"
     static var plistURL: URL {
         FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent("Library/LaunchAgents/\(label).plist")

@@ -4,7 +4,7 @@ set -e
 cd "$(dirname "$0")"
 ./build.sh
 DEST="$HOME/Applications/CursorRing.app"
-PLIST="$HOME/Library/LaunchAgents/local.cursorring.plist"
+PLIST="$HOME/Library/LaunchAgents/io.github.boyanangelov.cursorring.plist"
 mkdir -p "$HOME/Applications" "$HOME/Library/LaunchAgents"
 pkill -x CursorRing 2>/dev/null || true
 launchctl bootout "gui/$(id -u)" "$PLIST" 2>/dev/null || true
@@ -14,7 +14,7 @@ cat > "$PLIST" <<EOF
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>Label</key><string>local.cursorring</string>
+  <key>Label</key><string>io.github.boyanangelov.cursorring</string>
   <key>ProgramArguments</key>
   <array><string>$DEST/Contents/MacOS/CursorRing</string></array>
   <key>RunAtLoad</key><true/>

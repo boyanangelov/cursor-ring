@@ -4,6 +4,34 @@ A tiny macOS menu-bar app that draws a circular band around the mouse cursor at 
 
 ![CursorRing around the mouse cursor](docs/screenshot.png)
 
+## Why
+
+The idea comes from *Eno*, Gary Hustwit's documentary about Brian Eno, where a ring like this around the mouse pointer caught my eye.
+
+A ring makes the pointer easy to follow:
+
+- **Screen sharing, demos and recordings.** Viewers can see where you're pointing without hunting for a tiny arrow.
+- **Large or multiple displays.** You find the cursor at a glance instead of shaking the mouse.
+- **Accessibility.** It helps anyone with low vision or who loses track of small pointers.
+- **Focus.** A soft halo marks where your attention is on a busy screen.
+
+The ring ignores clicks, so it never gets in the way, and you can tune its size, thickness, opacity and colour (or hide it) from the menu bar.
+
+## Download
+
+Grab `CursorRing.zip` from the [latest release](https://github.com/boyanangelov/cursor-ring/releases/latest), unzip it and move `CursorRing.app` to Applications.
+
+The app isn't signed with an Apple Developer ID, so macOS blocks it the first time. To open it anyway: right-click the app and choose **Open**, or go to **System Settings ▸ Privacy & Security** and click **Open Anyway**. You can also clear the quarantine flag from a terminal:
+
+```sh
+xattr -dr com.apple.quarantine /Applications/CursorRing.app
+```
+
+## Requirements
+
+- macOS 11 (Big Sur) or later
+- To build from source: the Xcode Command Line Tools (`xcode-select --install`)
+
 ## Build & run
 
 ```sh
@@ -19,7 +47,7 @@ Use the menu-bar icon to adjust radius, thickness, opacity and color, or to hide
 
 ## Start at login
 
-Tick **Start at Login** in the menu-bar menu. It writes a LaunchAgent (`~/Library/LaunchAgents/local.cursorring.plist`) pointing at the running copy of the app, and unticking removes it. The change applies from your next login.
+Tick **Start at Login** in the menu-bar menu. It writes a LaunchAgent (`~/Library/LaunchAgents/io.github.boyanangelov.cursorring.plist`) pointing at the running copy of the app, and unticking removes it. The change applies from your next login.
 
 Or install it into `~/Applications` and register it for login in one go:
 
@@ -27,14 +55,8 @@ Or install it into `~/Applications` and register it for login in one go:
 ./install.sh
 ```
 
-Installs to `~/Applications` and registers a LaunchAgent (`~/Library/LaunchAgents/local.cursorring.plist`). The script prints the uninstall command.
+Installs to `~/Applications` and registers a LaunchAgent (`~/Library/LaunchAgents/io.github.boyanangelov.cursorring.plist`). The script prints the uninstall command.
 
-## Screenshots
+## License
 
-`scripts/snap.swift` captures the area around the cursor over a clean backdrop, so no other windows end up in the shot. It works for any app that draws on top of other windows:
-
-```sh
-swift scripts/snap.swift docs/screenshot.png 640 400 dark   # or light
-```
-
-Your terminal needs Screen Recording permission.
+[MIT](LICENSE)

@@ -12,11 +12,12 @@ cat > "$APP/Contents/Info.plist" <<'EOF'
 <plist version="1.0">
 <dict>
   <key>CFBundleName</key><string>CursorRing</string>
-  <key>CFBundleIdentifier</key><string>local.cursorring</string>
+  <key>CFBundleIdentifier</key><string>io.github.boyanangelov.cursorring</string>
   <key>CFBundleExecutable</key><string>CursorRing</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleVersion</key><string>1</string>
   <key>LSUIElement</key><true/>
+  <key>LSMinimumSystemVersion</key><string>11.0</string>
 </dict>
 </plist>
 EOF
