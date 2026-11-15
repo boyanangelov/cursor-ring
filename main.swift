@@ -27,6 +27,42 @@ final class Settings {
         get { d.object(forKey: "visible") as? Bool ?? true }
         set { d.set(newValue, forKey: "visible") }
     }
+    var hideInFullScreen: Bool {
+        get { d.object(forKey: "hideInFullScreen") as? Bool ?? false }
+        set { d.set(newValue, forKey: "hideInFullScreen") }
+    }
+}
+
+// MARK: - Full-screen detection
+
+enum FullScreen {
+    /// True when another app has a normal-level window covering the whole screen under the
+    /// cursor (native full screen, or a borderless game/video window). Uses window bounds,
+    /// layer and owner only, so it needs no Screen Recording permission.
+    static func isActiveUnderCursor() -> Bool {
+        guard let primary = NSScreen.screens.first else { return false }
+        let mouse = NSEvent.mouseLocation
+        guard let screen = NSScreen.screens.first(where: { $0.frame.contains(mouse) }) else { return false }
+        // CGWindow bounds use a top-left origin; NSScreen frames use bottom-left.
+        let f = screen.frame
+        let target = CGRect(x: f.minX, y: primary.frame.height - f.maxY, width: f.width, height: f.height)
+        let me = ProcessInfo.processInfo.processIdentifier
+
+        guard let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements],
+                                                    kCGNullWindowID) as? [[String: Any]] else { return false }
+        for w in list {
+            guard (w[kCGWindowLayer as String] as? Int) == 0,
+                  (w[kCGWindowOwnerPID as String] as? Int32) != me,
+                  (w[kCGWindowAlpha as String] as? Double ?? 1) > 0,
+                  let dict = w[kCGWindowBounds as String] as? NSDictionary,
+                  let b = CGRect(dictionaryRepresentation: dict as CFDictionary) else { continue }
+            if abs(b.minX - target.minX) < 1, abs(b.minY - target.minY) < 1,
+               abs(b.width - target.width) < 1, abs(b.height - target.height) < 1 {
+                return true
+            }
+        }
+        return false
+    }
 }
 
 let palette: [(String, NSColor)] = [
@@ -131,6 +167,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     var window: RingWindow!
     var statusItem: NSStatusItem!
     var timer: Timer?
+    var fullScreenTimer: Timer?
+    var ringShown = false
     var toggleItem: NSMenuItem!
     var radiusLabel: NSTextField!
     var thicknessLabel: NSTextField!
@@ -138,12 +176,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ n: Notification) {
         window = RingWindow()
-        if Settings.shared.visible { window.orderFrontRegardless() }
+        updateRingVisibility()
 
         timer = Timer(timeInterval: 1.0 / 120.0, repeats: true) { [weak self] _ in
             self?.window.follow()
         }
         RunLoop.main.add(timer!, forMode: .common)
+
+        // Full-screen check is a window-list query, so poll it far slower than the cursor.
+        fullScreenTimer = Timer(timeInterval: 0.25, repeats: true) { [weak self] _ in
+            self?.updateRingVisibility()
+        }
+        RunLoop.main.add(fullScreenTimer!, forMode: .common)
+        NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.activeSpaceDidChangeNotification, object: nil, queue: .main
+        ) { [weak self] _ in self?.updateRingVisibility() }
 
         buildMenu()
     }
@@ -185,6 +232,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(colorItem)
 
         menu.addItem(.separator())
+        let fsItem = NSMenuItem(title: "Hide in Full-Screen Apps", action: #selector(toggleHideInFullScreen(_:)), keyEquivalent: "")
+        fsItem.target = self
+        fsItem.state = s.hideInFullScreen ? .on : .off
+        menu.addItem(fsItem)
         let loginItem = NSMenuItem(title: "Start at Login", action: #selector(toggleLogin(_:)), keyEquivalent: "")
         loginItem.target = self
         loginItem.state = LoginItem.isEnabled ? .on : .off
@@ -226,10 +277,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         toggleItem.title = Settings.shared.visible ? "Hide Ring" : "Show Ring"
     }
 
+    /// Shows or hides the ring from the "visible" setting and, if enabled, full-screen state.
+    func updateRingVisibility() {
+        let s = Settings.shared
+        let show = s.visible && !(s.hideInFullScreen && FullScreen.isActiveUnderCursor())
+        guard show != ringShown else { return }
+        ringShown = show
+        if show { window.orderFrontRegardless() } else { window.orderOut(nil) }
+    }
+
     @objc func toggle() {
         Settings.shared.visible.toggle()
-        if Settings.shared.visible { window.orderFrontRegardless() } else { window.orderOut(nil) }
+        updateRingVisibility()
         updateToggleTitle()
+    }
+
+    @objc func toggleHideInFullScreen(_ item: NSMenuItem) {
+        Settings.shared.hideInFullScreen.toggle()
+        item.state = Settings.shared.hideInFullScreen ? .on : .off
+        updateRingVisibility()
     }
 
     @objc func toggleLogin(_ item: NSMenuItem) {

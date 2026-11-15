@@ -43,6 +43,8 @@ open CursorRing.app
 
 Use the menu-bar icon to adjust radius, thickness, opacity and color, or to hide the ring. Changes apply live.
 
+Tick **Hide in Full-Screen Apps** to hide the ring automatically while an app is full screen on the display under the cursor (native full screen, or a borderless game or video window). It comes back when you leave full screen. Off by default.
+
 ## Start at login
 
 Tick **Start at Login** in the menu-bar menu. It writes a LaunchAgent (`~/Library/LaunchAgents/io.github.boyanangelov.cursorring.plist`) pointing at the running copy of the app, and unticking removes it. The change applies from your next login.
